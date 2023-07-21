@@ -4,7 +4,6 @@ import org.lwjgl.opengl.GL11;
 import java.awt.Color;
 
 import net.minecraft.client.Minecraft;
-import overrideapi.OverrideAPI;
 
 public class mod_GrassBlockRenderFix extends BaseMod {
 	public static int grassBlockRender;
@@ -17,7 +16,9 @@ public class mod_GrassBlockRenderFix extends BaseMod {
 	public static boolean fancymode = true;
 
 	public void ModsLoaded() {
-		Block grass = (OverrideAPI.overrideVanillaBlock(Block.grass, BlockGrassRenderFix.class)).setHardness(0.6F).setStepSound(Block.soundGrassFootstep).setBlockName("grass");	
+		grassBlockRender = ModLoader.getUniqueBlockModelID(this, true);
+		Block.blocksList[Block.grass.blockID] = null;
+		overrideVanillaBlock(Block.grass, (new BlockGrassRenderFix()).setHardness(0.6F).setStepSound(Block.soundGrassFootstep).setBlockName("grass"));
 	}
 
 	public void RenderInvBlock(RenderBlocks renderer, Block block, int metadata, int modelID) {
@@ -91,10 +92,46 @@ public class mod_GrassBlockRenderFix extends BaseMod {
 	}
 
 	public String Version() {
-		return "1.0";
+		return "1.1";
 	}
 
-	{
-		grassBlockRender = ModLoader.getUniqueBlockModelID(this, true);
+	public static void overrideVanillaBlock(Block block0, Block block1) {
+		try {
+			for(int i2 = 0; i2 < Block.class.getDeclaredFields().length; ++i2) {
+				try {
+					if(((Block)Block.class.getDeclaredFields()[i2].get((Object)null)).equals(block0)) {
+						ModLoader.setPrivateValue(Block.class, (Object)null, i2, block1);
+						break;
+					}
+				} catch (Exception exception10) {
+				}
+			}
+
+			Item[] item12 = Item.itemsList;
+			int i3 = item12.length;
+
+			for(int i4 = 0; i4 < i3; ++i4) {
+				Item item5 = item12[i4];
+
+				try {
+					java.lang.reflect.Field field6 = ItemTool.class.getDeclaredFields()[0];
+					field6.setAccessible(true);
+					Block[] block7 = (Block[])((Block[])field6.get(item5));
+
+					for(int i8 = 0; i8 < block7.length; ++i8) {
+						if(block7[i8].equals(block0)) {
+							block7[i8] = block1;
+							field6.set(item5, block7);
+							break;
+						}
+					}
+				} catch (Exception exception9) {
+				}
+			}
+
+			System.gc();
+		} catch (Exception exception11) {
+			throw new RuntimeException(exception11);
+		}
 	}
 }
