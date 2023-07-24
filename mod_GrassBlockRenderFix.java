@@ -7,23 +7,16 @@ import net.minecraft.client.Minecraft;
 
 public class mod_GrassBlockRenderFix extends BaseMod {
 	public static int grassBlockRender;
-	private static int defaultGrassColor = ColorizerGrass.getGrassColor(0.5, 1);
-	private static float grassred = (float)(defaultGrassColor >> 16 & 255) / 255.0F;
-	private static float grassgreen = (float)(defaultGrassColor >> 8 & 255) / 255.0F;
-	private static float grassblue = (float)(defaultGrassColor & 255) / 255.0F;
 
-	@MLProp(name="Fancy_mode", info="colored side texture of grass block when on inventory (slower)")
+	@MLProp(name="Fancy_grass", info="colored side texture of grass block when on inventory (slower)")
 	public static boolean fancymode = true;
-
-	public void ModsLoaded() {
-		grassBlockRender = ModLoader.getUniqueBlockModelID(this, true);
-		Block.blocksList[Block.grass.blockID] = null;
-		overrideVanillaBlock(Block.grass, (new BlockGrassRenderFix()).setHardness(0.6F).setStepSound(Block.soundGrassFootstep).setBlockName("grass"));
-	}
 
 	public void RenderInvBlock(RenderBlocks renderer, Block block, int metadata, int modelID) {
 		Tessellator nw1 = Tessellator.instance;
 		if(modelID == grassBlockRender) {
+			float grassred = (float)(ColorizerGrass.getGrassColor(0.96, 0.44) >> 16 & 255) / 255.0F;
+			float grassgreen = (float)(ColorizerGrass.getGrassColor(0.96, 0.44) >> 8 & 255) / 255.0F;
+			float grassblue = (float)(ColorizerGrass.getGrassColor(0.96, 0.44) & 255) / 255.0F;
 			block.setBlockBoundsForItemRender();
 			GL11.glTranslatef(-0.5F, -0.5F, -0.5F);
 			nw1.startDrawingQuads();
@@ -95,37 +88,37 @@ public class mod_GrassBlockRenderFix extends BaseMod {
 		return "1.1";
 	}
 
-	public static void overrideVanillaBlock(Block block0, Block block1) {
+	public mod_GrassBlockRenderFix() {
+		grassBlockRender = ModLoader.getUniqueBlockModelID(this, true);
 		try {
+			Block overridedBlock = null;
 			for(int i2 = 0; i2 < Block.class.getDeclaredFields().length; ++i2) {
 				try {
-					if(((Block)Block.class.getDeclaredFields()[i2].get((Object)null)).equals(block0)) {
-						ModLoader.setPrivateValue(Block.class, (Object)null, i2, block1);
+					if(((Block)Block.class.getDeclaredFields()[i2].get((Object)null)).equals(Block.grass)) {
+						Block.blocksList[Block.grass.blockID] = null;
+						ModLoader.setPrivateValue(Block.class, (Object)null, i2, overridedBlock = (new BlockGrassRenderFix()).setHardness(0.6F).setStepSound(Block.soundGrassFootstep).setBlockName("grass"));
 						break;
 					}
 				} catch (Exception exception10) {
 				}
 			}
 
-			Item[] item12 = Item.itemsList;
-			int i3 = item12.length;
+			if(overridedBlock != null) {
+				for(int index = 0; index < Item.itemsList.length; ++index) {
+					Item targetitem = Item.itemsList[index];
 
-			for(int i4 = 0; i4 < i3; ++i4) {
-				Item item5 = item12[i4];
+					try {
+						Block[] effectiveBlocks =  (Block[])ModLoader.getPrivateValue(ItemTool.class, targetitem, 0);
 
-				try {
-					java.lang.reflect.Field field6 = ItemTool.class.getDeclaredFields()[0];
-					field6.setAccessible(true);
-					Block[] block7 = (Block[])((Block[])field6.get(item5));
-
-					for(int i8 = 0; i8 < block7.length; ++i8) {
-						if(block7[i8].equals(block0)) {
-							block7[i8] = block1;
-							field6.set(item5, block7);
-							break;
+						for(int ebIndex = 0; ebIndex < effectiveBlocks.length; ++ebIndex) {
+							if(effectiveBlocks[ebIndex].equals(Block.grass)) {
+								effectiveBlocks[ebIndex] = overridedBlock;
+								ModLoader.setPrivateValue(ItemTool.class, targetitem, 0, effectiveBlocks);
+								break;
+							}
 						}
+					} catch (Exception exception9) {
 					}
-				} catch (Exception exception9) {
 				}
 			}
 
