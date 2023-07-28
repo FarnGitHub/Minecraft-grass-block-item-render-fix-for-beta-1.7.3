@@ -85,46 +85,47 @@ public class mod_GrassBlockRenderFix extends BaseMod {
 	}
 
 	public String Version() {
-		return "1.1";
+		return "1.6";
 	}
 
-	public mod_GrassBlockRenderFix() {
+	public void ModsLoaded() {
 		grassBlockRender = ModLoader.getUniqueBlockModelID(this, true);
 		try {
 			Block overridedBlock = null;
 			for(int i2 = 0; i2 < Block.class.getDeclaredFields().length; ++i2) {
 				try {
-					if(((Block)Block.class.getDeclaredFields()[i2].get((Object)null)).equals(Block.grass)) {
+					if(((Block)(Block.class.getDeclaredFields()[i2]).get(null)) == Block.grass) {
 						Block.blocksList[Block.grass.blockID] = null;
 						ModLoader.setPrivateValue(Block.class, (Object)null, i2, overridedBlock = (new BlockGrassRenderFix()).setHardness(0.6F).setStepSound(Block.soundGrassFootstep).setBlockName("grass"));
+						this.addEffectiveTools(new Item[]{Item.shovelDiamond, Item.shovelGold, Item.shovelSteel, Item.shovelStone, Item.shovelWood} , new Block[]{overridedBlock});
 						break;
 					}
 				} catch (Exception exception10) {
 				}
 			}
 
-			if(overridedBlock != null) {
-				for(int index = 0; index < Item.itemsList.length; ++index) {
-					Item targetitem = Item.itemsList[index];
-
-					try {
-						Block[] effectiveBlocks =  (Block[])ModLoader.getPrivateValue(ItemTool.class, targetitem, 0);
-
-						for(int ebIndex = 0; ebIndex < effectiveBlocks.length; ++ebIndex) {
-							if(effectiveBlocks[ebIndex].equals(Block.grass)) {
-								effectiveBlocks[ebIndex] = overridedBlock;
-								ModLoader.setPrivateValue(ItemTool.class, targetitem, 0, effectiveBlocks);
-								break;
-							}
-						}
-					} catch (Exception exception9) {
-					}
-				}
-			}
 
 			System.gc();
 		} catch (Exception exception11) {
 			throw new RuntimeException(exception11);
+		}
+	}
+
+	private void addEffectiveTools(Item[] effectiveTools, Block[] vulnerableBlocks) {
+		try {
+			java.lang.reflect.Field blocksEffectiveAgainstField = ItemTool.class.getDeclaredFields()[0];
+			blocksEffectiveAgainstField.setAccessible(true);
+
+			for (Item tool : effectiveTools) {
+				Block[] blocksEffectiveAgainstOriginal = (Block[]) blocksEffectiveAgainstField.get(tool);
+				Block[] blocksEffectiveAgainst = new Block[blocksEffectiveAgainstOriginal.length + vulnerableBlocks.length];
+				System.arraycopy(blocksEffectiveAgainstOriginal, 0, blocksEffectiveAgainst, 0, blocksEffectiveAgainstOriginal.length);
+				System.arraycopy(vulnerableBlocks, 0, blocksEffectiveAgainst, blocksEffectiveAgainstOriginal.length, vulnerableBlocks.length);
+				blocksEffectiveAgainstField.set(tool, blocksEffectiveAgainst);
+			}
+
+		} catch (Exception e) {
+			System.out.println("(Farn Annoyance Fix) Failed To Add Tool Effective: " + e);
 		}
 	}
 }
