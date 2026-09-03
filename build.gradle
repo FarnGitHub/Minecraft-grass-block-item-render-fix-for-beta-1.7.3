@@ -1,0 +1,82 @@
+plugins {
+    id 'java'
+    id 'xyz.wagyourtail.unimined' version '1.4.2-SNAPSHOT'
+}
+
+group = project.property('group')
+version = project.property('version')
+base.archivesName = project.property('modname')
+
+java {
+    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 8
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    unimined.modrinthMaven()
+}
+
+unimined {
+    useGlobalCache = false
+
+    minecraft {
+        version 'b1.7.3'
+        side "client"
+
+        mappings {
+            retroMCP("b1.7")
+            devNamespace("retroMCP")
+            stubs(['official', 'retroMCP']) {
+                def base = 'net/minecraft/src'
+                def mapClass = { name ->
+                    def path = "$base/$name"
+                    c(name, path, path)
+                }
+
+                ['ModLoader'].each(mapClass)
+            }
+        }
+
+        merged {
+            fabric {
+                //obfuscated = true
+                //defaultProdNamespace()
+                customIntermediaries = true
+                prodNamespace("official")
+                loader '0.19.5'
+            }
+            jarMod {
+            }
+        }
+    }
+}
+
+import xyz.wagyourtail.unimined.api.minecraft.task.RemapJarTask
+
+tasks.withType(RemapJarTask).configureEach {
+    mixinRemap {
+        enableBaseMixin()
+        enableMixinExtra()
+    }
+}
+
+dependencies {
+    jarMod(files("custom_jar/Recobbled 1.6_03.jar"))
+    jarMod(files("custom_jar/ModLoaderMP for Recobbled 1.6 v2.jar"))
+    modImplementation("maven.modrinth:mod-remapping-api:1.27.3")
+
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}

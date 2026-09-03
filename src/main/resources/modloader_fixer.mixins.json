@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "farn.grassblockitemfix.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "RenderBlockMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
