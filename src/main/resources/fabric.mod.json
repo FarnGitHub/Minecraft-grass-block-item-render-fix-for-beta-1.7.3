@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "modloader_fixer",
+  "id": "grass_block_item_render_fix",
   "version": "${version}",
   "name": "Grass Block Item Render Fix",
   "description": "Fix Item Render for grass block",
