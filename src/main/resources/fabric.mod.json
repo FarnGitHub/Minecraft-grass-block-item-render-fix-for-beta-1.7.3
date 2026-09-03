@@ -2,15 +2,15 @@
   "schemaVersion": 1,
   "id": "modloader_fixer",
   "version": "${version}",
-  "name": "ModLoader Fixer",
-  "description": "Fix loading mod from mod folder for Risugami's ModLoader",
+  "name": "Grass Block Item Render Fix",
+  "description": "Fix Item Render for grass block",
   "authors": [
     "farnfarn02"
   ],
   "license": "CC0-1.0",
   "environment": "client",
   "mixins": [
-    "modloader_fixer.mixins.json"
+    "grassblockitemrenderfix.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.14.19",
